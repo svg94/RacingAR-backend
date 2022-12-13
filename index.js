@@ -6,8 +6,8 @@ const app = express();
 const httpPort = 3000;
 const httpsPort = 3001;
 
-let key = fs.readFileSync(__dirname + '/../certs/selfsigned.key');
-let cert = fs.readFileSync(__dirname + '/../certs/selfsigned.crt');
+let key = fs.readFileSync(__dirname + '/certs/client-key.pem');
+let cert = fs.readFileSync(__dirname + '/certs/client-cert.pem');
 let options = {
     key: key,
     cert: cert
