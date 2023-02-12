@@ -28,9 +28,13 @@ let server = https.createServer(options, app);
 const io = new Server(server);
 
 io.on('connection', (socket) => {
-    console.log('a user connected');
+    console.log('a user connected', socket.id);
     socket.on('disconnect', () => {
         console.log('user disconnected');
+    });
+
+    socket.emit("introduction",()=>{
+
     });
 });
 
