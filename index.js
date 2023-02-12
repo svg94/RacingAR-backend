@@ -27,10 +27,29 @@ app.listen(httpPort, () => {
 let server = https.createServer(options, app);
 const io = new Server(server);
 
+let players = [];
 io.on('connection', (socket) => {
     console.log('a user connected', socket.id);
+    console.log(players);
+    socket.on('join',(playerData)=>{
+        playerData.socketId = socket.id;
+        console.log(playerData);
+        players.push(playerData);
+        io.sockets.emit("join", playerData);
+    });
+    socket.on('joined',()=>{
+       io.sockets.emit("joined", players);
+    });
+    //handles players status. Event broadcasts positions and if the user is alive (did not hit an obstacle)
+    socket.on('updatedPlayers',()=>{
+
+    });
     socket.on('disconnect', () => {
+        let disconnectedPlayer = players.filter(player => player.socketId !== socket.id);
+        players = players.filter(player => player.socketId !== socket.id);
+        io.sockets.emit("disconnectedPlayer", disconnectedPlayer);
         console.log('user disconnected');
+        console.log(players);
     });
 
     socket.emit("introduction",()=>{
