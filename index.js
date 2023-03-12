@@ -52,6 +52,7 @@ const gameState = {};
 const clientRooms = {};
 
 io.on('connection', (client) => {
+    client.on('keydown', handlePlayerMovement);
     client.on('newGame', handleNewGame);
     client.on('joinGame',handleJoinGame);
     function handleNewGame(){
