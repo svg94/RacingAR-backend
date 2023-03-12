@@ -1,0 +1,16 @@
+version: '1.0'
+
+services:
+
+  mongodb:
+    image: racingar-db
+    restart: always
+    container_name: racingar-db
+    build: ./
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: racing
+      MONGO_INITDB_ROOT_PASSWORD: racing-ar-2023
+      #MONGO_INITDB_DATABASE: admin
+    command: mongod
