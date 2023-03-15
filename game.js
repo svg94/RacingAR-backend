@@ -1,12 +1,12 @@
 module.exports = {
     initGame,
     gameLoop,
-    getUpdatedVelocity,
+    //getUpdatedVelocity,
 }
 
 function initGame() {
     const state = createGameState()
-    randomFood(state);
+    //randomFood(state);
     return state;
 }
 

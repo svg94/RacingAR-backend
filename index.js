@@ -5,22 +5,21 @@ const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 const {createRoomID} = require("./utils");
 const {initGame, gameLoop} = require("./game");
+/*const socket = require('socket.io');
+const io = new socket();
+io.listen(process.env.PORT || 3000);*/
 
-const dbConnection = "mongodb://racing:racing-ar-2023@localhost:27017/?authMechanism=DEFAULT";
+/*const dbConnection = "mongodb://localhost:27017";
 mongoose.connect(dbConnection, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    auth: {
-        username: process.env.COSMOSDB_USER,
-        password: process.env.COSMOSDB_PASSWORD
-    }
 })
     .then(() => console.log('Connection to MongoDB successful'))
     .catch((err) => {
         console.log(dbConnection);
         console.error(err)
         process.exit()
-    });
+    });*/
 
 const app = express();
 const httpPort = 3000;
@@ -52,9 +51,17 @@ const gameState = {};
 const clientRooms = {};
 
 io.on('connection', (client) => {
+    console.log("connected");
+
     client.on('keydown', handlePlayerMovement);
     client.on('newGame', handleNewGame);
     client.on('joinGame',handleJoinGame);
+    client.on('connected',handleConnected);
+
+    function handleConnected(){
+        console.log("Player connected");
+    }
+
     function handleNewGame(){
         //Create a new socket.io Room
         let roomName = createRoomID();
