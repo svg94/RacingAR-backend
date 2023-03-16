@@ -3,7 +3,7 @@ module.exports = {
 }
 
 function createRoomID(){
-    idLength = 5;
+    idLength = 1;
     let result = '';
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
 

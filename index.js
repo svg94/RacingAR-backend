@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 const {createRoomID} = require("./utils");
 const {initGame, gameLoop} = require("./game");
 const Console = require("console");
+const { BoxBufferGeometry} = require("three");
+const { Mesh} = require("three");
+const { MeshBasicMaterial} = require("three");
+
 /*const socket = require('socket.io');
 const io = new socket();
 io.listen(process.env.PORT || 3000);*/
@@ -57,6 +61,7 @@ io.on('connection', (client) => {
     client.on('keydown', handlePlayerMovement);
     client.on('newGame', handleNewGame);
     client.on('joinGame',handleJoinGame);
+    client.on('startAR',handleStartAR);
 
     function handleJoinGame(gameCode){
         /*const room = io.sockets.adapter.rooms[gameCode];
@@ -121,6 +126,16 @@ io.on('connection', (client) => {
         io.sockets.in(roomName).emit('TestNachricht', test); //test wird später state
 
     }
+
+    function handleStartAR(gameCode){
+        let coords = {x:0.5,y:0,z:0};
+        console.log(coords);
+        io.sockets.in(gameCode).emit('TestBox', coords);
+    }
+
+
+
+
 
 
     function startGameInterval(roomName){
