@@ -4,7 +4,7 @@ const fs = require('fs');
 const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 const {createRoomID} = require("./utils");
-const {initGame, gameLoop} = require("./game");
+const {initGame, gameLoop, obstacleLoop} = require("./game");
 const Console = require("console");
 const { BoxBufferGeometry} = require("three");
 const { Mesh} = require("three");
@@ -101,7 +101,7 @@ io.on('connection', (client) => {
         client.emit('init', 2);
 
         sendAllPlayersJoinedGameReady(gameCode);
-        //startGameInterval(gameCode);
+        startGameInterval(gameCode);
     }
 
     function handleNewGame(){
@@ -128,12 +128,31 @@ io.on('connection', (client) => {
     }
 
     function handleStartAR(gameCode){
-        let coords = {x:0.5,y:0,z:0};
+        //Dürfen nur ganze Zahlen von 0 bis 19 sein!
+        let coords = {x:5,y:0,z:5};
         console.log(coords);
         io.sockets.in(gameCode).emit('TestBox', coords);
+        gameState[gameCode] = initGame();
+        moveObjectsIntervall(gameCode)
     }
 
+    function moveObjectsIntervall(gameCode){
+        const intervalObstacles = setInterval(()=>{
+            const winner =  gameState[gameCode].winner;
+            console.log("loop");
 
+            if(!winner){
+                //Move obstacles
+                //Movement function
+                obstacleLoop(gameState[gameCode]);
+                io.sockets.in(gameCode).emit('moveObstacles', gameState[gameCode].obstacles);
+            }else{
+                emitGameOver(gameCode, winner);
+                gameState[gameCode] = null;
+                clearInterval(intervalObstacles);
+            }
+        }, 1000);
+    }
 
 
 
@@ -153,18 +172,7 @@ io.on('connection', (client) => {
             }
         }, 1000 / FRAME_RATE);
 
-        const intervalObstacles = setInterval(()=>{
-            const winner = gameLoop(gameState[roomName]);
-
-            if(!winner){
-                //Move obstacles
-                emitGameState(roomName, gameState[roomName]);
-            }else{
-                emitGameOver(roomName, winner);
-                gameState[roomName] = null;
-                clearInterval(intervalObstacles);
-            }
-        }, 1000);
+        //moveObjectsIntervall(roomName);
     }
 
     function handlePlayerMovement(direction) {

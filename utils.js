@@ -1,5 +1,6 @@
 module.exports = {
-    createRoomID
+    createRoomID,
+    randomIntFromInterval
 }
 
 function createRoomID(){
@@ -11,4 +12,7 @@ function createRoomID(){
         result+= characters.charAt(Math.floor((Math.random() * characters.length)));
     }
     return result;
+}
+function randomIntFromInterval(min, max) { // min and max included
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }

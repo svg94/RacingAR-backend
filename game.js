@@ -1,6 +1,8 @@
+const {randomIntFromInterval} = require("./utils");
 module.exports = {
     initGame,
     gameLoop,
+    obstacleLoop
     //getUpdatedVelocity,
 }
 
@@ -10,8 +12,25 @@ function initGame() {
     return state;
 }
 
+//Positionen gehen von 0 bis 19, weil das Brett in 20 Felder unterteilt ist (Obstacles [und Player] sind nämlich 0.05 breit und lang und das Brett ist 1 breit und lang. Dadurch ergibt sich 20).
 function createGameState() {
+    // Create Obstacles
+    let obstacles = [];
+    //40 ist konstante aus frontend. Größe ObjectPool
+    for(let i = 0; i < 40; i++){
+        obstacles.push({
+            pos: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            active: false,
+            id: i
+        });
+    }
+    // Return created GameState
     return {
+        winner: null,
         players: [
             {
                 pos: {
@@ -28,16 +47,7 @@ function createGameState() {
                 }
             }
         ],
-        obstacles:[
-            {
-                pos: {
-                    x: 18,
-                    y: 10,
-                    z: 4
-                },
-                active: false
-            },
-        ]
+        obstacles
     };
 }
 
@@ -66,6 +76,31 @@ function gameLoop(state) {
     }
 
     return false;
+}
+function obstacleLoop(state){
+    let inactiveObjects = state.obstacles.filter(obj => !obj.active);
+    let activeObjects = state.obstacles.filter(obj => obj.active);
+
+
+    if (inactiveObjects.length > 0) {
+        let randomElementNumber = randomIntFromInterval(0, inactiveObjects.length-1);
+
+        let possibleObstacleXPositionLength= 19;
+        inactiveObjects[randomElementNumber].pos.x = Math.floor(Math.random()*possibleObstacleXPositionLength);
+        inactiveObjects[randomElementNumber].pos.z = 0;
+
+        inactiveObjects[randomElementNumber].active = true;
+        console.log(state.obstacles);
+    }
+    if (activeObjects.length > 0) {
+        activeObjects.forEach(obj => {
+            obj.pos.z = obj.pos.z+1;
+
+            if (obj.pos.z > 19) {
+                obj.active = false;
+            }
+        });
+    }
 }
 
 function playerHitObstacles(player, state){
