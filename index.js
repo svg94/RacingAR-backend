@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 const {createRoomID} = require("./utils");
 const {initGame, gameLoop} = require("./game");
+const Console = require("console");
 /*const socket = require('socket.io');
 const io = new socket();
 io.listen(process.env.PORT || 3000);*/
@@ -56,27 +57,21 @@ io.on('connection', (client) => {
     client.on('keydown', handlePlayerMovement);
     client.on('newGame', handleNewGame);
     client.on('joinGame',handleJoinGame);
-    client.on('connected',handleConnected);
 
-    function handleConnected(){
-        console.log("Player connected");
-    }
-
-    function handleNewGame(){
-        //Create a new socket.io Room
-        let roomName = createRoomID();
-        clientRooms[client.id] = roomName;
-        client.emit('gameCode', roomName);
-
-        gameState[roomName] = initGame();
-
-        client.join(roomName);
-        client.number = 1;  //Player 1
-        client.emit('init', 1);
-    }
     function handleJoinGame(gameCode){
-        const room = io.sockets.adapter.rooms[gameCode];
+        /*const room = io.sockets.adapter.rooms[gameCode];
+        console.log(io.sockets.adapter.rooms);
+        console.log(io.sockets.adapter.rooms.has(gameCode));
+        if (io.sockets.adapter.rooms.has(gameCode)) {
+            // action when room already exists
+        } else {
+            console.log(socket.id + 'tried to join ' + gameCode + 'but the room does not exist.');
+            // action when room is new
+        };
+        // join the room in any case
+        client.join(gameCode);
 
+        console.log(room);
         let allUsers;
         if(room){
             allUsers = room.sockets;
@@ -92,15 +87,42 @@ io.on('connection', (client) => {
         }else if(numberClients > 1){
             client.emit('tooManyPlayers');
             return;
-        }
+        }*/
 
         clientRooms[client.id] = gameCode;
         client.join(gameCode);
         client.number = 2;
+        console.log("Player "+ client.number + " joined Room " + gameCode);
         client.emit('init', 2);
 
-        startGameInterval(gameCode);
+        sendAllPlayersJoinedGameReady(gameCode);
+        //startGameInterval(gameCode);
     }
+
+    function handleNewGame(){
+        //Create a new socket.io Room
+        let roomName = createRoomID();
+        clientRooms[client.id] = roomName;
+        //console.log(clientRooms[client.id]);
+        client.emit('gameCode', roomName);
+
+        gameState[roomName] = initGame();
+        //console.log(gameState[roomName]);
+
+        client.join(roomName);
+        client.number = 1;  //Player 1
+        console.log("Player "+ client.number + " joined Room " + roomName);
+        client.emit('init', 1);
+    }
+
+    function sendAllPlayersJoinedGameReady(roomName){
+        const state = gameState[roomName];
+        let test = "Diese Testnachricht soll an alle Spieler im Raum gehen";
+        io.sockets.in(roomName).emit('TestNachricht', test); //test wird später state
+
+    }
+
+
     function startGameInterval(roomName){
         //Video timestamp 58:20
         const intervalId = setInterval(()=>{
