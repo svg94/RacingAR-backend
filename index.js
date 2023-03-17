@@ -134,6 +134,10 @@ io.on('connection', (client) => {
         io.sockets.in(gameCode).emit('TestBox', coords);
         gameState[gameCode] = initGame();
         moveObjectsIntervall(gameCode)
+        //Display Player
+        let playersCoords = gameState[gameCode].players;
+        io.sockets.in(gameCode).emit('DisplayPlayers', playersCoords);
+
     }
 
     function moveObjectsIntervall(gameCode){
