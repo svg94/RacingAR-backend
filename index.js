@@ -14,7 +14,7 @@ const { MeshBasicMaterial} = require("three");
 const io = new socket();
 io.listen(process.env.PORT || 3000);*/
 
-/*const dbConnection = "mongodb://localhost:27017";
+const dbConnection = "mongodb://localhost:27017";
 mongoose.connect(dbConnection, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -24,7 +24,7 @@ mongoose.connect(dbConnection, {
         console.log(dbConnection);
         console.error(err)
         process.exit()
-    });*/
+    });
 
 const app = express();
 const httpPort = 3000;

@@ -1,35 +1,42 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-let PlayerSchema = new Schema({
-    username: {
-        type: String,
-        unique: true,
-        required: false
+let PositionPlayerSchema = new Schema({
+    x: {
+        type: Number
     },
-    socketId:{
-        unique: true,
-        required: false
-    },
-    position:{
-        required: false
-    },
-    alive:{
-        type: Boolean,
-        required: false
-    },
-    isHost:{
-        type: Boolean
-    },
-    score:{
-        type: Number,
-        required: false
+    z:{
+        type: Number
     }
+});
+let PositionObstaclesSchema = new Schema({
+    x: {
+        type: Number
+    },
+    y:{
+        type: Number
+    },
+    z:{
+        type: Number
+    }
+});
+let PlayerSchema = new Schema({
+    pos: {
+        type: PositionPlayerSchema
+    },
+    number: 1
 });
 
 let ObstacleSchema = new Schema({
     position:{
-        required: false
+        required: false,
+        type: PositionObstaclesSchema
+    },
+    id: {
+        type: Number
+    },
+    active:{
+        type: Boolean
     }
 })
 
@@ -39,6 +46,9 @@ let SessionSchema = new Schema({
         unique: true,
         required: true
     },
+    winner: {
+        type: Number
+    },
     players:[{
         type: PlayerSchema
     }],
@@ -47,7 +57,5 @@ let SessionSchema = new Schema({
     }]
 
 });
-
-
 
 module.exports = mongoose.model('Session', SessionSchema);
