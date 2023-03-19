@@ -78,7 +78,6 @@ function gameLoop(state) {
     return false;
 }
 function obstacleLoop(state){
-    console.log("Obstacle loop");
     let inactiveObjects = state.obstacles.filter(obj => !obj.active);
     let activeObjects = state.obstacles.filter(obj => obj.active);
 

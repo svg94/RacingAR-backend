@@ -62,6 +62,7 @@ io.on('connection', (client) => {
     client.on('newGame', handleNewGame);
     client.on('joinGame',handleJoinGame);
     client.on('startAR',handleStartAR);
+    client.on('collision',handleCollision);
 
     function handleJoinGame(gameCode){
 
@@ -111,22 +112,36 @@ io.on('connection', (client) => {
 
 
     }
+    function handleCollision(data){
+        console.log("Collision")
+        console.log(data.gameCode);
+        console.log(data.playerNumber);
+        console.log("Collision End")
+        if(!data.gameCode || !data.playerNumber){
+            return;
+        }
+        if(data.playerNumber === 1){
+            gameState[data.gameCode].winner = 2
+        }else{
+            gameState[data.gameCode].winner = 1
+        }
+    }
 
     function moveObjectsIntervall(gameCode){
         const intervalObstacles = setInterval(()=>{
             const winner =  gameState[gameCode].winner;
-            console.log("loop");
-            console.log("Winner",winner);
+            // console.log("loop");
+
 
             if(!winner){
                 //Move obstacles
                 //Movement function
-                console.log("Schicke Move Obstacles");
                 obstacleLoop(gameState[gameCode]);
                 io.sockets.in(gameCode).emit('moveObstacles', gameState[gameCode].obstacles);
             }else{
-                emitGameOver(gameCode, winner);
-                gameState[gameCode] = null;
+                console.log("Winner",winner);
+                //emitGameOver(gameCode, winner);
+                //gameState[gameCode] = null;
                 clearInterval(intervalObstacles);
             }
         }, 1000);
@@ -136,7 +151,6 @@ io.on('connection', (client) => {
 
 
     function startGameInterval(roomName){
-        //Video timestamp 58:20
         const intervalId = setInterval(()=>{
             const winner = gameLoop(gameState[roomName]);
 
@@ -144,8 +158,9 @@ io.on('connection', (client) => {
                 //client.emit('gameState',JSON.stringify(gameState));
                 emitGameState(roomName, gameState[roomName]);
             }else{
-                emitGameOver(roomName, winner);
-                gameState[roomName] = null;
+                //emitGameOver(roomName, winner);
+                //gameState[roomName] = null;
+                console.log("Ende");
                 clearInterval(intervalId);
             }
         }, 1000 / FRAME_RATE);
@@ -158,7 +173,7 @@ io.on('connection', (client) => {
         if (!roomName) {
             return;
         }
-        console.log(playerCoords);
+
         //Apply logic for movement
         gameState[roomName].players[playerCoords.number - 1].pos = playerCoords.pos;
     }
