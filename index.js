@@ -39,7 +39,7 @@ let options = {
     rejectUnauthorized: false
 };
 
-const FRAME_RATE = 5;
+const FRAME_RATE = 15;
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -64,35 +64,6 @@ io.on('connection', (client) => {
     client.on('startAR',handleStartAR);
 
     function handleJoinGame(gameCode){
-        /*const room = io.sockets.adapter.rooms[gameCode];
-        console.log(io.sockets.adapter.rooms);
-        console.log(io.sockets.adapter.rooms.has(gameCode));
-        if (io.sockets.adapter.rooms.has(gameCode)) {
-            // action when room already exists
-        } else {
-            console.log(socket.id + 'tried to join ' + gameCode + 'but the room does not exist.');
-            // action when room is new
-        };
-        // join the room in any case
-        client.join(gameCode);
-
-        console.log(room);
-        let allUsers;
-        if(room){
-            allUsers = room.sockets;
-        }
-
-        let numberClients = 0;
-        if(allUsers){
-            numberClients = Object.keys(allUsers).length;
-        }
-        if(numberClients === 0){
-            client.emit('unkownGame');
-            return;
-        }else if(numberClients > 1){
-            client.emit('tooManyPlayers');
-            return;
-        }*/
 
         clientRooms[client.id] = gameCode;
         client.join(gameCode);
@@ -101,7 +72,6 @@ io.on('connection', (client) => {
         client.emit('playerNumber', 2);
 
         sendAllPlayersJoinedGameReady(gameCode);
-        startGameInterval(gameCode);
     }
 
     function handleNewGame(){

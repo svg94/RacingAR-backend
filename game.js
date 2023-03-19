@@ -34,15 +34,15 @@ function createGameState() {
         players: [
             {
                 pos: {
-                    x: 5,
-                    z: 17
+                    x: 0.2,
+                    z: 0.8
                 },
                 number: 1
             },
             {
                 pos: {
-                    x: 15,
-                    z: 17
+                    x: 0.8,
+                    z: 0.8
                 },
                 number: 2
             }
