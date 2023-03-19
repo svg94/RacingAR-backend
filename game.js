@@ -34,17 +34,17 @@ function createGameState() {
         players: [
             {
                 pos: {
-                    x: 3,
-                    y: 10,
-                    z: 4
+                    x: 5,
+                    z: 17
                 },
+                number: 1
             },
             {
                 pos: {
-                    x: 18,
-                    y: 10,
-                    z: 4
-                }
+                    x: 15,
+                    z: 17
+                },
+                number: 2
             }
         ],
         obstacles
@@ -78,6 +78,7 @@ function gameLoop(state) {
     return false;
 }
 function obstacleLoop(state){
+    console.log("Obstacle loop");
     let inactiveObjects = state.obstacles.filter(obj => !obj.active);
     let activeObjects = state.obstacles.filter(obj => obj.active);
 
@@ -90,7 +91,6 @@ function obstacleLoop(state){
         inactiveObjects[randomElementNumber].pos.z = 0;
 
         inactiveObjects[randomElementNumber].active = true;
-        console.log(state.obstacles);
     }
     if (activeObjects.length > 0) {
         activeObjects.forEach(obj => {

@@ -39,7 +39,7 @@ let options = {
     rejectUnauthorized: false
 };
 
-const FRAME_RATE = 25;
+const FRAME_RATE = 5;
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -98,7 +98,7 @@ io.on('connection', (client) => {
         client.join(gameCode);
         client.number = 2;
         console.log("Player "+ client.number + " joined Room " + gameCode);
-        client.emit('init', 2);
+        client.emit('playerNumber', 2);
 
         sendAllPlayersJoinedGameReady(gameCode);
         startGameInterval(gameCode);
@@ -117,7 +117,7 @@ io.on('connection', (client) => {
         client.join(roomName);
         client.number = 1;  //Player 1
         console.log("Player "+ client.number + " joined Room " + roomName);
-        client.emit('init', 1);
+        client.emit('playerNumber', 1);
     }
 
     function sendAllPlayersJoinedGameReady(roomName){
@@ -131,12 +131,14 @@ io.on('connection', (client) => {
         //Dürfen nur ganze Zahlen von 0 bis 19 sein!
         let coords = {x:5,y:0,z:5};
         console.log(coords);
-        io.sockets.in(gameCode).emit('TestBox', coords);
+        //io.sockets.in(gameCode).emit('TestBox', coords);
         gameState[gameCode] = initGame();
         moveObjectsIntervall(gameCode)
         //Display Player
         let playersCoords = gameState[gameCode].players;
         io.sockets.in(gameCode).emit('DisplayPlayers', playersCoords);
+        startGameInterval(gameCode);
+
 
     }
 
@@ -144,10 +146,12 @@ io.on('connection', (client) => {
         const intervalObstacles = setInterval(()=>{
             const winner =  gameState[gameCode].winner;
             console.log("loop");
+            console.log("Winner",winner);
 
             if(!winner){
                 //Move obstacles
                 //Movement function
+                console.log("Schicke Move Obstacles");
                 obstacleLoop(gameState[gameCode]);
                 io.sockets.in(gameCode).emit('moveObstacles', gameState[gameCode].obstacles);
             }else{
@@ -167,7 +171,7 @@ io.on('connection', (client) => {
             const winner = gameLoop(gameState[roomName]);
 
             if(!winner){
-                client.emit('gameState',JSON.stringify(gameState));
+                //client.emit('gameState',JSON.stringify(gameState));
                 emitGameState(roomName, gameState[roomName]);
             }else{
                 emitGameOver(roomName, winner);
@@ -179,23 +183,20 @@ io.on('connection', (client) => {
         //moveObjectsIntervall(roomName);
     }
 
-    function handlePlayerMovement(direction) {
+    function handlePlayerMovement(playerCoords) {
         const roomName = clientRooms[client.id];
         if (!roomName) {
             return;
         }
-
+        console.log(playerCoords);
         //Apply logic for movement
-
-        const newPos = {x:2,y:2,z:2};
-
-        gameState[roomName].players[client.number - 1].pos = newPos;
+        gameState[roomName].players[playerCoords.number - 1].pos = playerCoords.pos;
     }
 
 
     function emitGameState(roomName, state){
         io.sockets.in(roomName)
-            .emit('gameState',JSON.stringify(state));
+            .emit('gameState',state);
     }
     function emitGameOver(roomName, winner){
         io.sockets.in(roomName)
