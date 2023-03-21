@@ -93,7 +93,7 @@ io.on('connection', (client) => {
 
     function sendAllPlayersJoinedGameReady(roomName){
         const state = gameState[roomName];
-        let test = "Diese Testnachricht soll an alle Spieler im Raum gehen";
+        let test = "All Players joined the Room";
         io.sockets.in(roomName).emit('TestNachricht', test); //test wird später state
 
     }
