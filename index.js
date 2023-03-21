@@ -9,12 +9,12 @@ const Console = require("console");
 const { BoxBufferGeometry} = require("three");
 const { Mesh} = require("three");
 const { MeshBasicMaterial} = require("three");
-
+const Session = require("./models/session");
 /*const socket = require('socket.io');
 const io = new socket();
 io.listen(process.env.PORT || 3000);*/
 
-/*const dbConnection = "mongodb://localhost:27017";
+const dbConnection = "mongodb://localhost:27017";
 mongoose.connect(dbConnection, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -24,7 +24,7 @@ mongoose.connect(dbConnection, {
         console.log(dbConnection);
         console.error(err)
         process.exit()
-    });*/
+    });
 
 const app = express();
 const httpPort = 3000;
@@ -110,6 +110,12 @@ io.on('connection', (client) => {
         io.sockets.in(gameCode).emit('DisplayPlayers', playersCoords);
         startGameInterval(gameCode);
 
+        let gameSession = gameState[gameCode];
+        gameSession.gameCode = gameCode;
+        let session = new Session(
+            gameSession
+        );
+        session.save().then();
 
     }
     function handleCollision(data){
@@ -130,12 +136,9 @@ io.on('connection', (client) => {
     function moveObjectsIntervall(gameCode){
         const intervalObstacles = setInterval(()=>{
             const winner =  gameState[gameCode].winner;
-            // console.log("loop");
-
 
             if(!winner){
                 //Move obstacles
-                //Movement function
                 obstacleLoop(gameState[gameCode]);
                 io.sockets.in(gameCode).emit('moveObstacles', gameState[gameCode].obstacles);
             }else{
@@ -151,11 +154,16 @@ io.on('connection', (client) => {
 
 
     function startGameInterval(roomName){
-        const intervalId = setInterval(()=>{
+        const intervalId = setInterval(async ()=>{
             const winner = gameLoop(gameState[roomName]);
 
             if(!winner){
                 //client.emit('gameState',JSON.stringify(gameState));
+                await Session.deleteOne({gameCode: roomName});
+                let gameSession = gameState[roomName];
+                gameSession.gameCode = roomName;
+                let currentSession = new Session(gameSession);
+                await currentSession.save(currentSession);
                 emitGameState(roomName, gameState[roomName]);
             }else{
                 //emitGameOver(roomName, winner);
