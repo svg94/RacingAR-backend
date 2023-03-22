@@ -63,6 +63,8 @@ io.on('connection', (client) => {
     client.on('joinGame',handleJoinGame);
     client.on('startAR',handleStartAR);
     client.on('collision',handleCollision);
+    client.on('LoadUnfinishedGame',handleUnfinishedGame);
+    client.on('startUnfinishedGame',startUnfinishedGame);
     client.on('disconnect', async ()=>{
         console.log("DISCONNECT", client.id);
         let session = await Session.findOne({'players.socketId': client.id});
@@ -127,8 +129,6 @@ io.on('connection', (client) => {
 
     function handleStartAR(gameCode){
         //Dürfen nur ganze Zahlen von 0 bis 19 sein!
-        let coords = {x:5,y:0,z:5};
-        //io.sockets.in(gameCode).emit('TestBox', coords);
         clientIntervals[gameCode] = {obstacleInterval: null, gameLoopInterval: null};
         moveObjectsIntervall(gameCode)
         //Display Player
@@ -158,19 +158,42 @@ io.on('connection', (client) => {
             gameState[data.gameCode].winner = 1
         }
     }
-    async function handleDisconnect(client){
-        console.log("DISCONNECT", client.id);
-        let session = await Session.findOne({'players.socketId': client.id});
-        console.log(session);
-        //         let disconnectedPlayer = players.filter(player => player.socketId !== socket.id);
-//         players = players.filter(player => player.socketId !== socket.id);
-//         io.sockets.emit("disconnectedPlayer", disconnectedPlayer);
-//         console.log("------");
-//         console.log('user'+disconnectedPlayer.name+' disconnected');
-//         console.log(players);
-//         console.log("------");
-//     });
+
+    async function handleUnfinishedGame(gameCode, playerNumber){
+        let session = await Session.findOne({gameCode},'-_id -__v').lean();;
+        if(session){
+            //remove all _ids
+            clientRooms[client.id] = gameCode;
+            client.join(gameCode);
+            session = removeIds(session);
+            //socket IDS anpassen
+            session.players[playerNumber-1].socketId = client.id;
+            gameState[gameCode] = session;
+        }
     }
+    function removeIds(session){
+        session.players.forEach(player=>{
+            delete player._id;
+        });
+        session.obstacles.forEach(obs=>{
+            delete obs._id;
+        });
+        return session;
+    }
+    function startUnfinishedGame(gameCode){
+        if(gameState[gameCode]){
+            clientIntervals[gameCode] = {obstacleInterval: null, gameLoopInterval: null};
+            moveObjectsIntervall(gameCode)
+            //Display Player
+
+            let playersCoords = gameState[gameCode].players;
+            io.sockets.in(gameCode).emit('DisplayPlayers', playersCoords);
+
+            startGameInterval(gameCode);
+        }
+    }
+
+
 
     function moveObjectsIntervall(gameCode){
 
@@ -199,6 +222,7 @@ io.on('connection', (client) => {
             if(!winner){
                 //client.emit('gameState',JSON.stringify(gameState));
                 await Session.deleteOne({gameCode: roomName});
+
                 let gameSession = gameState[roomName];
                 gameSession.gameCode = roomName;
                 let currentSession = new Session(gameSession);
@@ -235,46 +259,6 @@ io.on('connection', (client) => {
             .emit('gameOver',JSON.stringify(winner));
     }
 });
-// io.on('connection', (socket) => {
-//     console.log("------");
-//     console.log('a user connected', socket.id);
-//     console.log("------");
-//     console.log(players);
-//     socket.on('join',(playerData)=>{
-//         playerData.socketId = socket.id;
-//         console.log(typeof playerData.socketId);
-//         console.log("------");
-//         console.log("Event Join");
-//         console.log(playerData);
-//         console.log("------");
-//         players.push(playerData);
-//         io.sockets.emit("join", playerData);
-//     });
-//     socket.on('joined',()=>{
-//         console.log("------");
-//         console.log("Event Joined:");
-//         console.log(players);
-//         console.log("------");
-//        io.sockets.emit("joined", players);
-//     });
-//     //handles players status. Event broadcasts positions and if the user is alive (did not hit an obstacle)
-//     socket.on('updatedPlayers',()=>{
-//
-//     });
-//     socket.on('disconnect', () => {
-//         let disconnectedPlayer = players.filter(player => player.socketId !== socket.id);
-//         players = players.filter(player => player.socketId !== socket.id);
-//         io.sockets.emit("disconnectedPlayer", disconnectedPlayer);
-//         console.log("------");
-//         console.log('user'+disconnectedPlayer.name+' disconnected');
-//         console.log(players);
-//         console.log("------");
-//     });
-//
-//     socket.emit("introduction",()=>{
-//
-//     });
-// });
 
 server.listen(httpsPort, () => {
     console.log("https server starting on port : " + httpsPort);
