@@ -54,7 +54,7 @@ const io = new Server(server);
 let players = [];
 const gameState = {};
 const clientRooms = {};
-
+const clientIntervals = {}; //Nutzen wir, um die Intervalle global zu "speichern", damit wir sie im disconnect fall clearen können.
 io.on('connection', (client) => {
     console.log("connected");
 
@@ -63,12 +63,39 @@ io.on('connection', (client) => {
     client.on('joinGame',handleJoinGame);
     client.on('startAR',handleStartAR);
     client.on('collision',handleCollision);
+    client.on('disconnect', async ()=>{
+        console.log("DISCONNECT", client.id);
+        let session = await Session.findOne({'players.socketId': client.id});
+        if(session){
+            let gameCode = session.gameCode;
+            if(clientIntervals[gameCode]){
+                let intervalToClear = clientIntervals[gameCode].obstacleInterval;
+                clearInterval(intervalToClear);
+
+                intervalToClear = clientIntervals[gameCode].gameLoopInterval;
+                clearInterval(intervalToClear);
+
+                clientIntervals[gameCode] = null;
+                console.log("Spiel beendet");
+            }
+        }
+
+        //         let disconnectedPlayer = players.filter(player => player.socketId !== socket.id);
+//         players = players.filter(player => player.socketId !== socket.id);
+//         io.sockets.emit("disconnectedPlayer", disconnectedPlayer);
+//         console.log("------");
+//         console.log('user'+disconnectedPlayer.name+' disconnected');
+//         console.log(players);
+//         console.log("------");
+//     });
+    });
 
     function handleJoinGame(gameCode){
 
         clientRooms[client.id] = gameCode;
         client.join(gameCode);
         client.number = 2;
+        gameState[gameCode].players[1].socketId = client.id;
         console.log("Player "+ client.number + " joined Room " + gameCode);
         client.emit('playerNumber', 2);
 
@@ -84,7 +111,7 @@ io.on('connection', (client) => {
 
         gameState[roomName] = initGame();
         //console.log(gameState[roomName]);
-
+        gameState[roomName].players[0].socketId = client.id;
         client.join(roomName);
         client.number = 1;  //Player 1
         console.log("Player "+ client.number + " joined Room " + roomName);
@@ -101,9 +128,8 @@ io.on('connection', (client) => {
     function handleStartAR(gameCode){
         //Dürfen nur ganze Zahlen von 0 bis 19 sein!
         let coords = {x:5,y:0,z:5};
-        console.log(coords);
         //io.sockets.in(gameCode).emit('TestBox', coords);
-        gameState[gameCode] = initGame();
+        clientIntervals[gameCode] = {obstacleInterval: null, gameLoopInterval: null};
         moveObjectsIntervall(gameCode)
         //Display Player
         let playersCoords = gameState[gameCode].players;
@@ -132,11 +158,24 @@ io.on('connection', (client) => {
             gameState[data.gameCode].winner = 1
         }
     }
+    async function handleDisconnect(client){
+        console.log("DISCONNECT", client.id);
+        let session = await Session.findOne({'players.socketId': client.id});
+        console.log(session);
+        //         let disconnectedPlayer = players.filter(player => player.socketId !== socket.id);
+//         players = players.filter(player => player.socketId !== socket.id);
+//         io.sockets.emit("disconnectedPlayer", disconnectedPlayer);
+//         console.log("------");
+//         console.log('user'+disconnectedPlayer.name+' disconnected');
+//         console.log(players);
+//         console.log("------");
+//     });
+    }
 
     function moveObjectsIntervall(gameCode){
-        const intervalObstacles = setInterval(()=>{
-            const winner =  gameState[gameCode].winner;
 
+        clientIntervals[gameCode].obstacleInterval = setInterval(()=>{
+            const winner =  gameState[gameCode].winner;
             if(!winner){
                 //Move obstacles
                 obstacleLoop(gameState[gameCode]);
@@ -145,7 +184,7 @@ io.on('connection', (client) => {
                 console.log("Winner",winner);
                 //emitGameOver(gameCode, winner);
                 //gameState[gameCode] = null;
-                clearInterval(intervalObstacles);
+                clearInterval(clientIntervals[gameCode].obstacleInterval);
             }
         }, 1000);
     }
@@ -154,7 +193,7 @@ io.on('connection', (client) => {
 
 
     function startGameInterval(roomName){
-        const intervalId = setInterval(async ()=>{
+        clientIntervals[roomName].gameLoopInterval = setInterval(async ()=>{
             const winner = gameLoop(gameState[roomName]);
 
             if(!winner){
@@ -169,7 +208,7 @@ io.on('connection', (client) => {
                 //emitGameOver(roomName, winner);
                 //gameState[roomName] = null;
                 console.log("Ende");
-                clearInterval(intervalId);
+                clearInterval(clientIntervals[roomName].gameLoopInterval);
             }
         }, 1000 / FRAME_RATE);
 

@@ -13,7 +13,9 @@ let SessionSchema = new Schema({
             number: {
                 type: Number,
             },
-
+            socketId:{
+                type: String
+            },
             pos:{
                 x:{
                     type: Number

@@ -36,14 +36,16 @@ function createGameState() {
                     x: 0.2,
                     z: 0.8
                 },
-                number: 1
+                number: 1,
+                socketId: null
             },
             {
                 pos: {
                     x: 0.8,
                     z: 0.8
                 },
-                number: 2
+                number: 2,
+                socketId: null
             }
         ],
         obstacles
