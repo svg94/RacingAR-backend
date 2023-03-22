@@ -162,9 +162,10 @@ io.on('connection', (client) => {
     async function handleUnfinishedGame(gameCode, playerNumber){
         let session = await Session.findOne({gameCode},'-_id -__v').lean();;
         if(session){
-            //remove all _ids
+            console.log("Player "+playerNumber+" rejoined Room "+gameCode);
             clientRooms[client.id] = gameCode;
             client.join(gameCode);
+            //remove all _ids
             session = removeIds(session);
             //socket IDS anpassen
             session.players[playerNumber-1].socketId = client.id;
@@ -221,12 +222,13 @@ io.on('connection', (client) => {
 
             if(!winner){
                 //client.emit('gameState',JSON.stringify(gameState));
-                await Session.deleteOne({gameCode: roomName});
+                // await Session.deleteOne({gameCode: roomName});
 
                 let gameSession = gameState[roomName];
                 gameSession.gameCode = roomName;
-                let currentSession = new Session(gameSession);
-                await currentSession.save(currentSession);
+                // let currentSession = new Session(gameSession);
+                // await currentSession.save(currentSession);
+                await Session.updateOne({gameCode: roomName},{$set:gameSession});
                 emitGameState(roomName, gameState[roomName]);
             }else{
                 //emitGameOver(roomName, winner);
